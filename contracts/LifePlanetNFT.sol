@@ -17,6 +17,10 @@ contract LifePlanetNFT is ERC721TradableWithRoyalty {
 
     uint256 public cost = 0 ether; //TO BE ANNOUNCED 
     uint256 public maxSupply = 5555;
+    uint256 public maxOwnWhitelist = 2;
+    uint256 public maxSupplyWhitelist = 200;
+    uint256 public whitelistNumber = 0;
+    mapping(uint256 => mapping(address => uint256)) public balanceWhitelist;
     string URIToken = "https://gateway.pinata.cloud/ipfs/QmankFJfq1hAyVFy4Xh56Fivms3DrhpqUHPkzqPHCLPvrL?";  //TODO
     string URIContract = "https://gateway.pinata.cloud/ipfs/QmNPDToagnfGgLwi2tzwjYpgbvtpkJ3tnTQumsuHcvSa3n"; //TODO
 
@@ -33,6 +37,9 @@ contract LifePlanetNFT is ERC721TradableWithRoyalty {
     bytes32 public constant MINTER_TYPEHASH =
         keccak256("Minter(address wallet)");
     
+    // Event called when the cost changes
+    event ChangedCost(uint256 _cost);
+
     /**
      * @dev Modifier to check if the sender is in the whitelist 
      * @param signature signature make by whitelistSigningKey
@@ -94,11 +101,15 @@ contract LifePlanetNFT is ERC721TradableWithRoyalty {
         require(ERC721Tradable.totalSupply() + _mintAmount <= maxSupply, "LIFV: maximum supply of tokens has been exceeded");
         require(msg.value >= cost * _mintAmount,"LIFV: The amount sent is too low.");
 
+        require(balanceWhitelist[whitelistNumber][msg.sender] + _mintAmount <= maxOwnWhitelist , "LIFV: You exceeded the maximum amount of tokens allowed for this whitelist.");
+        require(ERC721Tradable.totalSupply() + _mintAmount <= maxSupplyWhitelist , "LIFV: maximum supply of tokens has been exceeded for this whitelist.");
+
         /// @notice Safely mint the NFTs
         for (uint256 i = 0; i < _mintAmount; i++) {
             uint256 currentTokenId = _nextTokenId.current();
             _nextTokenId.increment();
             _safeMint(msg.sender, currentTokenId);
+            balanceWhitelist[whitelistNumber][msg.sender]++;
         }
     }
 
@@ -149,11 +160,45 @@ contract LifePlanetNFT is ERC721TradableWithRoyalty {
         require(payable(payments).send(address(this).balance));
     }
     
+    /** @notice Reset mint balance for whitelist
+     */
+    function changeWhitelist() public onlyOwner {
+       whitelistNumber++;
+    }
+
+    /** @notice Overload function to change whitelist with new cost, new maxSupplyWhitelist and new maxOwnWhitelist
+     *  @param _newCost New cost per NFT in Wei
+     *  @param _newMaxSupplyWhitelist New maximum supply value for whitelist
+     *  @param _newMaxOwnWhitelist New maximum value to own
+     */
+    function changeWhitelist(uint256 _newCost, uint256 _newMaxSupplyWhitelist, uint256 _newMaxOwnWhitelist) public onlyOwner {
+        cost = _newCost;
+        maxSupplyWhitelist = _newMaxSupplyWhitelist;
+        maxOwnWhitelist = _newMaxOwnWhitelist;
+        changeWhitelist();
+        emit ChangedCost(cost);
+    }
+
+    /** @notice Update the maximum supply when enabling next whitelist
+     *  @param _newMaxSupplyWhitelist New maximum supply value for whitelist
+     */
+    function setMaxSupplyWhitelist(uint256 _newMaxSupplyWhitelist) public onlyOwner {
+        maxSupplyWhitelist = _newMaxSupplyWhitelist;
+    }
+    
+    /** @notice Update the maximum you can own when whitelist is enabled
+     *  @param _newMaxOwnWhitelist New maximum value to own
+     */
+    function setMaxOwnWhitelist(uint256 _newMaxOwnWhitelist) public onlyOwner {
+        maxOwnWhitelist = _newMaxOwnWhitelist;
+    }
+
     /** @notice Update COST
      *  @param _newCost New cost per NFT in Wei
      */
     function setCost(uint256 _newCost) public onlyOwner {
         cost = _newCost;
+        emit ChangedCost(cost);
     }
 
     /** @notice Update URIToken
