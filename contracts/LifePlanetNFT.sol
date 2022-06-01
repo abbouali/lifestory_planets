@@ -15,14 +15,15 @@ contract LifePlanetNFT is ERC721TradableWithRoyalty {
     using Counters for Counters.Counter;
     using ECDSA for bytes32;
 
-    uint256 public cost = 0 ether; //TO BE ANNOUNCED 
+    uint256 public cost = 0.27 ether; 
     uint256 public maxSupply = 5555;
     uint256 public maxOwnWhitelist = 2;
     uint256 public maxSupplyWhitelist = 200;
     uint256 public whitelistNumber = 0;
     mapping(uint256 => mapping(address => uint256)) public balanceWhitelist;
-    string URIToken = "https://gateway.pinata.cloud/ipfs/QmankFJfq1hAyVFy4Xh56Fivms3DrhpqUHPkzqPHCLPvrL?";  //TODO
-    string URIContract = "https://gateway.pinata.cloud/ipfs/QmNPDToagnfGgLwi2tzwjYpgbvtpkJ3tnTQumsuHcvSa3n"; //TODO
+    
+    string URIToken = "https://gateway.pinata.cloud/ipfs/QmU7EX2UTrgN8ykZdsYfmEeyHePgUSJwHJnwtwgzrvncY9?";
+    string URIContract = "https://gateway.pinata.cloud/ipfs/Qme7ZBXFpJcjMSDTcFFQpYF9Y9jT7cN1yfpRaYF2UsPi4q";
 
     address payable private payments;
 
